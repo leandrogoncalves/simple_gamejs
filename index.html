@@ -32,31 +32,43 @@
         },
       };
 
-      function createGameFactory() {
+      function createGameFactoryObserver() {
         function movePlayer(command) {
           console.log(`Moving ${command.playerId} with ${command.keyPressed}`);
 
+          const acceptedMoves = {
+            ArrowUp(player) {
+              if (player.y - 1 >= 0) {
+                player.y = player.y - 1;
+                return;
+              }
+            },
+            ArrowRight(player) {
+              if (player.x + 1 < screen.width) {
+                player.x = player.x + 1;
+                return;
+              }
+            },
+            ArrowDown(player) {
+              if (player.y + 1 < screen.height) {
+                player.y = player.y + 1;
+                return;
+              }
+            },
+            ArrowLeft(player) {
+              if (player.x - 1 >= 0) {
+                player.x = player.x - 1;
+                return;
+              }
+            },
+          };
+
           const keyPressed = event.key;
-          const player = game.state.players[currentPlayerId];
+          const player = gameObserver.state.players[currentPlayerId];
+          const moveFunction = acceptedMoves[keyPressed];
 
-          if (keyPressed === "ArrowUp" && player.y - 1 >= 0) {
-            player.y = player.y - 1;
-            return;
-          }
-
-          if (keyPressed === "ArrowRight" && player.x + 1 < screen.width) {
-            player.x = player.x + 1;
-            return;
-          }
-
-          if (keyPressed === "ArrowDown" && player.y + 1 < screen.height) {
-            player.y = player.y + 1;
-            return;
-          }
-
-          if (keyPressed === "ArrowLeft" && player.x - 1 >= 0) {
-            player.x = player.x - 1;
-            return;
+          if (moveFunction && typeof moveFunction === "function") {
+            moveFunction(player);
           }
         }
 
@@ -66,11 +78,11 @@
         };
       }
 
-      const game = createGameFactory();
-      const keyboardListener = createKeyDownListenerFactory();
-      keyboardListener.subscribe(game.movePlayer);
+      const gameObserver = createGameFactoryObserver();
+      const keyboardListener = createKeyDownListenerFactorySubject();
+      keyboardListener.subscribe(gameObserver.movePlayer);
 
-      function createKeyDownListenerFactory() {
+      function createKeyDownListenerFactorySubject() {
         const state = {
           observers: [],
         };
@@ -111,14 +123,14 @@
         context.fillStyle = "white";
         context.clearRect(0, 0, 10, 10);
 
-        for (const playerId in game.state.players) {
-          const player = game.state.players[playerId];
+        for (const playerId in gameObserver.state.players) {
+          const player = gameObserver.state.players[playerId];
           context.fillStyle = "black";
           context.fillRect(player.x, player.y, 1, 1);
         }
 
-        for (const fruitId in game.state.fruits) {
-          const fruit = game.state.fruits[fruitId];
+        for (const fruitId in gameObserver.state.fruits) {
+          const fruit = gameObserver.state.fruits[fruitId];
           context.fillStyle = "green";
           context.fillRect(fruit.x, fruit.y, 1, 1);
         }
